@@ -1,69 +1,39 @@
 <?php
 
-function xprint( $param, $title = 'Debugging info' )
-{
-    ini_set( 'xdebug.var_display_max_depth', 50 );
-    ini_set( 'xdebug.var_display_max_children', 25600 );
-    ini_set( 'xdebug.var_display_max_data', 9999999999 );
-    if ( PHP_SAPI == 'cli' )
-    {
-        echo "\n---------------[ $title ]---------------\n";
-        echo print_r( $param, true );
-        echo "\n-------------------------------------------\n";
-    }
-    else
-    {
-        ?>
-        <style>
-            .xprint-wrapper {
-                padding: 10px;
-                margin-bottom: 25px;
-                color: black;
-                background: #f6f6f6;
-                position: relative;
-                top: 18px;
-                border: 1px solid gray;
-                font-size: 11px;
-                font-family: InputMono, Monospace;
-                width: 80%;
-            }
+$curl = curl_init($_GET['q']);
+curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 
-            .xprint-title {
-                padding-top: 1px;
-                color: #000;
-                background: #ddd;
-                position: relative;
-                top: -18px;
-                width: 170px;
-                height: 15px;
-                text-align: center;
-                border: 1px solid gray;
-                font-family: InputMono, Monospace;
-            }
-        </style>
-        <div class="xprint-wrapper">
-        <div class="xprint-title"><?= $title ?></div>
-        <pre style="color:#000;"><?= htmlspecialchars( print_r( $param, true ) ) ?></pre>
-        </div><?php
-    }
+$page = curl_exec($curl);
+
+if (curl_errno($curl)) {
+    echo 'Scraper error: ' . curl_error($curl);
+    exit;
 }
 
-function xd( $val, $title = null )
-{
-    xprint( $val, $title );
-    die();
+curl_close($curl);
+
+$regex = '/<div id="case_textlist">(.*?)<\/div>/s';
+if (preg_match($regex, $page, $list))
+    echo $list[0];
+else
+    print "Not found";
+
+
+$db = new Mysqli("", "", "", "");
+$query = "INSERT INTO test_xml (title, destination) VALUES ('" . $list[0] . "', '" . $title . "')";
+$db->query($query);
+
+$sql = "SELECT destination, price, title FROM test_xml";
+$result = $db->query($sql);
+
+if ($result->num_rows > 0) {
+    // output data of each row
+    while ($row = $result->fetch_assoc()) {
+        echo "<br> id: " . $row["destination"] . " - Name: " . $row["price"] . " " . $row["title"] . "<br>";
+    }
+
+} else {
+    echo "0 results";
 }
 
-
-
-
-
-
-$ch = curl_init($_GET['q']);
-
-
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true  );
-curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-$html = curl_exec($ch);
-curl_close($ch);
-xprint($html)  ;
+?>
