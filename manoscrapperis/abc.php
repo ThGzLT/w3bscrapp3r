@@ -18,7 +18,7 @@ a {
 <body>
 <div class="container-fluid">
     <div class="row content">
-        <form action="scrapping.php">
+        <form action="1scrap.php">
             <div class="input-group input-group-sm">
                 <input type="text" class="form-control" name="q" placeholder="Search here....">
                 <div class="input-group-btn">
